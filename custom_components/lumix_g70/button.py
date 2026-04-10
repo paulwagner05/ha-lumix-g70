@@ -80,7 +80,7 @@ class LumixTakePhotoButton(ButtonEntity):
             )
             
             if return_to_play_mode:
-                await asyncio.sleep(DELAY_IMAGE_PROCESSING_SECONDS)
+                await asyncio.sleep(self._client.delay_image_processing_seconds)
                 
         finally:
             if return_to_play_mode:
