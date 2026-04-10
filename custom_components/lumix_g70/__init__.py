@@ -11,11 +11,12 @@ from .const import (
     CONF_IP_ADDRESS,
     API_ENDPOINT,
     REQUEST_TIMEOUT_SECONDS,
+    DEFAULT_RETURN_TO_PLAY_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["button"]
+PLATFORMS = ["button", "switch"]
 
 
 class LumixCameraClient:
@@ -25,6 +26,7 @@ class LumixCameraClient:
         self._base_url = f"http://{ip_address}/{API_ENDPOINT}"
         self._session = session
         self.ip_address = ip_address
+        self.return_to_play_mode = DEFAULT_RETURN_TO_PLAY_MODE
 
     async def async_send_command(self, mode: str, value: str) -> bool:
         """Send a command to the camera."""

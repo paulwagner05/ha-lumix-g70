@@ -2,6 +2,8 @@
 
 DOMAIN = "lumix_g70"
 CONF_IP_ADDRESS = "ip_address"
+CONF_RETURN_TO_PLAY_MODE = "return_to_play_mode"
+DEFAULT_RETURN_TO_PLAY_MODE = True
 API_ENDPOINT = "cam.cgi"
 
 COMMAND_MODE_CAMERA = "camcmd"

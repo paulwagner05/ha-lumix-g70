@@ -15,6 +15,8 @@ from .const import (
     COMMAND_VALUE_PLAY_MODE,
     DELAY_LENS_EXTENSION_SECONDS,
     DELAY_IMAGE_PROCESSING_SECONDS,
+    CONF_RETURN_TO_PLAY_MODE,
+    DEFAULT_RETURN_TO_PLAY_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +62,8 @@ class LumixTakePhotoButton(ButtonEntity):
         """Handle the button press."""
         _LOGGER.debug("Taking photo on Lumix G70 at %s", self._client.ip_address)
         
+        return_to_play_mode = self._client.return_to_play_mode
+
         record_mode_activated = await self._client.async_send_command(
             mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_RECORD_MODE
         )
@@ -74,9 +78,12 @@ class LumixTakePhotoButton(ButtonEntity):
             await self._client.async_send_command(
                 mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_CAPTURE
             )
-            await asyncio.sleep(DELAY_IMAGE_PROCESSING_SECONDS)
-
+            
+            if return_to_play_mode:
+                await asyncio.sleep(DELAY_IMAGE_PROCESSING_SECONDS)
+                
         finally:
-            await self._client.async_send_command(
-                mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_PLAY_MODE
-            )
+            if return_to_play_mode:
+                await self._client.async_send_command(
+                    mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_PLAY_MODE
+                )
