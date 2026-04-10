@@ -1,46 +1,35 @@
 import logging
 import asyncio
 import aiohttp
-import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as config_validation
+
+from .const import (
+    DOMAIN,
+    CONF_IP_ADDRESS,
+    API_ENDPOINT,
+    REQUEST_TIMEOUT_SECONDS,
+    DEFAULT_RETURN_TO_PLAY_MODE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "lumix_g70"
-CONF_IP_ADDRESS = "ip_address"
-API_ENDPOINT = "cam.cgi"
-
-COMMAND_MODE_CAMERA = "camcmd"
-COMMAND_VALUE_RECORD_MODE = "recmode"
-COMMAND_VALUE_CAPTURE = "capture"
-COMMAND_VALUE_PLAY_MODE = "playmode"
-
-DELAY_LENS_EXTENSION_SECONDS = 2.0
-DELAY_IMAGE_PROCESSING_SECONDS = 1.5
-REQUEST_TIMEOUT_SECONDS = 5.0
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): config_validation.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = ["button", "switch"]
 
 
 class LumixCameraClient:
+    """Client for controlling the Panasonic Lumix G70."""
 
     def __init__(self, ip_address: str, session: aiohttp.ClientSession) -> None:
         self._base_url = f"http://{ip_address}/{API_ENDPOINT}"
         self._session = session
+        self.ip_address = ip_address
+        self.return_to_play_mode = DEFAULT_RETURN_TO_PLAY_MODE
 
     async def async_send_command(self, mode: str, value: str) -> bool:
+        """Send a command to the camera."""
         request_url = f"{self._base_url}?mode={mode}&value={value}"
 
         try:
@@ -67,44 +56,32 @@ class LumixCameraClient:
             return False
 
 
-async def async_setup(
-    home_assistant_instance: HomeAssistant, configuration: dict
-) -> bool:
-    domain_configuration = configuration.get(DOMAIN)
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Panasonic Lumix G70 component."""
+    # YAML configuration is no longer supported, but we keep setup to initialize the domain
+    hass.data.setdefault(DOMAIN, {})
+    return True
 
-    if domain_configuration is None:
-        return True
 
-    ip_address = domain_configuration.get(CONF_IP_ADDRESS)
-    client_session = async_get_clientsession(home_assistant_instance)
-    camera_client = LumixCameraClient(ip_address, client_session)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Panasonic Lumix G70 from a config entry."""
+    ip_address = entry.data[CONF_IP_ADDRESS]
+    session = async_get_clientsession(hass)
+    client = LumixCameraClient(ip_address, session)
 
-    async def async_handle_take_photo_service(service_call: ServiceCall) -> None:
-        record_mode_activated = await camera_client.async_send_command(
-            mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_RECORD_MODE
-        )
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = client
 
-        if not record_mode_activated:
-            _LOGGER.error("Failed to wake up camera. Aborting photo sequence.")
-            return
-
-        await asyncio.sleep(DELAY_LENS_EXTENSION_SECONDS)
-
-        try:
-            await camera_client.async_send_command(
-                mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_CAPTURE
-            )
-            await asyncio.sleep(DELAY_IMAGE_PROCESSING_SECONDS)
-
-        finally:
-            await camera_client.async_send_command(
-                mode=COMMAND_MODE_CAMERA, value=COMMAND_VALUE_PLAY_MODE
-            )
-
-    home_assistant_instance.services.async_register(
-        domain=DOMAIN,
-        service="take_photo",
-        service_func=async_handle_take_photo_service,
-    )
+    # Forward the setup to the button platform
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok

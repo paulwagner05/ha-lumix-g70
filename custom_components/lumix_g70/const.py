@@ -1,0 +1,16 @@
+"""Constants for the Panasonic Lumix G70 integration."""
+
+DOMAIN = "lumix_g70"
+CONF_IP_ADDRESS = "ip_address"
+CONF_RETURN_TO_PLAY_MODE = "return_to_play_mode"
+DEFAULT_RETURN_TO_PLAY_MODE = True
+API_ENDPOINT = "cam.cgi"
+
+COMMAND_MODE_CAMERA = "camcmd"
+COMMAND_VALUE_RECORD_MODE = "recmode"
+COMMAND_VALUE_CAPTURE = "capture"
+COMMAND_VALUE_PLAY_MODE = "playmode"
+
+DELAY_LENS_EXTENSION_SECONDS = 2.0
+DELAY_IMAGE_PROCESSING_SECONDS = 1.5
+REQUEST_TIMEOUT_SECONDS = 5.0

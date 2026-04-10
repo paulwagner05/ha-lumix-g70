@@ -1,6 +1,0 @@
-take_photo:
-  name: Take Photo
-  description: >
-    Wakes up the Panasonic Lumix G70, triggers the shutter to take a photo, 
-    and safely returns the camera to play mode to retract the lens and prevent 
-    thermal overload of the sensor.
