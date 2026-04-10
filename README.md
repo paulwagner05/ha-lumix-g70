@@ -1,20 +1,31 @@
 # Panasonic Lumix G70 - Home Assistant Integration
 
-A lightweight custom integration to control a Panasonic Lumix G70 mirrorless camera over the local network using its native HTTP API (`cam.cgi`).
+A custom integration to seamlessly integrate and control your Panasonic Lumix G70 mirrorless camera directly within Home Assistant over your local network using its native HTTP API (`cam.cgi`).
 
 ## Features
-* **Take Photo Service (`lumix_g70.take_photo`)**: Triggers the camera to take a picture.
-* **Built-in Hardware Protection**: The integration automatically manages the camera's state machine. It wakes the camera up (`recmode`), takes the photo (`capture`), and immediately forces it back to sleep (`playmode`). This closes the mechanical shutter, retracts the lens, and puts the heat-sensitive sensor in standby to prevent thermal overload and extend hardware lifespan.
-
-## Prerequisites
-1. **Infrastructure Mode**: The camera must be connected to your home Wi-Fi as a regular client (Infrastructure Mode), not serve it's own Wi-Fi as an Access Point.
-2. **Static IP**: You must assign a static IP address (infinite DHCP-Lease) to the camera in your router's DHCP settings so the integration can reliably reach the camera.
-3. **Network Isolation (Security)**: The camera's API has absolutely no authentication. It is strongly recommended to isolate the camera in a dedicated IoT VLAN and restrict access so that only your Home Assistant instance can reach it on TCP Port 80.
+* **Config Flow (UI Setup)**: Fully installable via the UI. No `configuration.yaml` editing required!
+* **Multiple Devices**: Add as many cameras as you want directly from the Integrations page. Home Assistant automatically creates a dedicated Device and Entities for each camera.
+* **Take Photo Button**: Instantly triggers the camera to take a picture using a native Home Assistant Button Entity (`button.press`).
+* **Return to Play Mode (Hardware Protection)**: A built-in Switch Entity allows you to toggle the camera's state machine behavior:
+  - **Enabled (Default)**: The camera automatically wakes up (`recmode`), takes the photo (`capture`), waits for processing, and forces itself back to sleep (`playmode`). This puts the sensor in standby, preventing thermal overload and extending hardware lifespan.
+  - **Disabled**: The camera wakes up, takes the photo, and stops. It skips the processing delay and stays in record mode, ready for consecutive rapid shots.
 
 ## Installation
-1. Copy the `lumix_g70` folder into your Home Assistant `custom_components` directory.
-2. Add the following configuration to your `configuration.yaml` file, and replace `X.X.X.X` with your camera's IP:
 
-```yaml
-lumix_g70:
-  ip_address: "X.X.X.X"
+### HACS
+1. In Home Assistant, navigate to **HACS > Integrations**.
+2. Click the 3 dots in the top right corner and select **Custom repositories**.
+3. Paste the URL to this GitHub repository.
+4. Select **Integration** as the category and click **Add**.
+5. Find the new "Panasonic Lumix G70 Controller" card, click download, and restart Home Assistant.
+
+## Prerequisites & Security
+1. **Infrastructure Mode**: The camera must be connected to your home Wi-Fi as a regular client, not serving its own Wi-Fi Access Point.
+2. **Static IP**: You must assign a static IP address in your router so the integration can reliably reach the camera.
+3. **Network Isolation**: The camera's API has no authentication. It is strongly recommended to isolate the camera on an IoT VLAN and restrict access so that only your Home Assistant server can reach it on TCP Port 80.
+
+## Configuration
+1. Go to **Settings > Devices & Services** in Home Assistant.
+2. Click **Add Integration** and search for `Panasonic Lumix G70 Controller`.
+3. Enter your camera's IP Address.
+4. Setup is complete! A new Device will be added with your "Take Photo" button and "Return to Play Mode" switch.
